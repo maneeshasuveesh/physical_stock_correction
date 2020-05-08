@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stock_correction_form_view" model="ir.ui.view">
+        <field name="name">stock.correction.form.view</field>
+        <field name="model">stock.correction</field>
+        <field name="arch" type="xml">
+             <form>
+                   <header>
+
+                     <button name="action_send_to_recheck" string="Send To Re-Checker" states="draft" type="object" class="btn-primary"/>
+                     <button name="action_recheck" string="Re-Check" states="to_recheck" type="object" class="btn-primary" groups="physical_stock_correction.group_recheck_stock_correction"/>
+                     <button name="action_submit" string="Submit" states="to_recheck" type="object" class="btn-primary" groups="physical_stock_correction.group_recheck_stock_correction"/>
+                     <button name="action_approve" string="Approve" states="to_approve" type="object" class="btn-primary" groups="stock.group_stock_manager"/>
+                     <button name="action_reject" string="Reject" states="to_approve" type="object" class="btn-primary" groups="stock.group_stock_manager"/>
+                     <button name="action_send_back" string="Send Back" states="to_approve" type="object" class="btn-primary" groups="stock.group_stock_manager"/>
+                     <field name="state" widget="statusbar" statusbar_visible="draft, done" />
+                 </header>
+                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                     <button type="object" name="action_view_inv_adjustments" class="oe_stat_button" icon="fa-truck" attrs="{'invisible': [('inv_count', '=', 0)]}" groups="base.group_user">
+                            <field name="inv_count" widget="statinfo" string="Inv Adjustments"/>
+                     </button>
+                     </div>
+                     <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                     </div>
+                     <group>
+                         <group>
+                           <field name="start_date" attrs="{'readonly':[('state','not in',['draft'])]}" />
+                         </group>
+                         <group>
+                           <field name="approved_date" readonly="1" />
+                         </group>
+
+                     </group>
+                     <group>
+                     <notebook>
+                         <page string="Correction Lines">
+                             <field name="line_ids" >
+                                 <tree  editable="bottom">
+                                   <field name="location_id" domain="[('usage','=','internal')]" attrs="{'readonly':[('state','not in',['draft'])]}"/>
+                                   <field name="lot_id" attrs="{'readonly':[('state','not in',['draft'])]}"/>
+                                   <field name="expiry_date" />
+                                   <field name="physical_quantity" attrs="{'readonly':[('state','not in',['draft'])]}"/>
+                                   <field name="actual_quantity" groups="physical_stock_correction.group_recheck_stock_correction,stock.group_stock_manager" readonly="1"/>
+                                   <field name="difference" groups="physical_stock_correction.group_recheck_stock_correction,stock.group_stock_manager" readonly="1"/>
+                                   <button name="action_verified" string="Ok" type="object" icon="fa-check text-success" attrs="{'column_invisible': [('parent.state', 'not in', ['to_recheck'])]}" groups="physical_stock_correction.group_recheck_stock_correction" states = "draft"/>
+                                   <button name="action_not_ok" string="Not Ok" type="object" icon="fa-times-circle text-danger" states = "draft" attrs="{'column_invisible': [('parent.state', 'not in', ['to_recheck'])]}" groups="physical_stock_correction.group_recheck_stock_correction"/>
+                                   <button name="action_approve" string="Approve" type="object" icon="fa-check text-success" attrs="{'column_invisible': [('parent.state', 'not in', ['to_approve'])]}" states = "verified" groups="stock.group_stock_manager"/>
+                                   <button name="action_reject" string="Reject" type="object" icon="fa-times-circle text-danger"  attrs="{'column_invisible': [('parent.state', 'not in', ['to_approve'])]}" groups="stock.group_stock_manager"/>
+                                   <button name="action_send_back" string="Send Back" type="object"   icon="fa-fast-backward" attrs="{'column_invisible': [('parent.state', 'not in', ['to_approve'])]}" groups="stock.group_stock_manager"/>
+                                   <field name="remarks" attrs="{'column_invisible': [('parent.state', 'not in', ['to_approve','done','rejected','send_back'])]}" groups="stock.group_stock_manager"/>
+                                   <field name="attachment_ids" widget="many2many_binary" class="oe_inline" attrs="{'column_invisible': [('parent.state', 'not in', ['to_approve','done','rejected','send_back'])]}" groups="stock.group_stock_manager"/>
+                                   <field name="state" readonly="1"/>
+                                 </tree>
+                             </field>
+                         </page>
+                     </notebook>
+                     </group>
+                 </sheet>
+             </form>
+
+        </field>
+
+    </record>
+     <record model='ir.ui.view' id='stock_correction_tree_view'>
+        <field name="name">stock.correction.tree.view</field>
+        <field name="model">stock.correction</field>
+        <field name="arch" type="xml" >
+            <tree default_order="name desc" >
+                      <field name="name"/>
+                      <field name="start_date"/>
+                      <field name="state"/>
+                      <field name="approved_date"/>
+            </tree>
+        </field>
+    </record>
+
+
+       <record id="action_stock_correction" model="ir.actions.act_window">
+            <field name="name">Physical Stock Correction</field>
+            <field name="res_model">stock.correction</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="stock_correction_tree_view"/>
+        </record>
+
+
+        <menuitem  id="menu_stock_correction"  action="action_stock_correction" string="Physical Stock Correction" parent="stock.menu_stock_warehouse_mgmt" groups="base.group_user"/>
+
+</odoo>
